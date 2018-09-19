@@ -26,6 +26,17 @@
 #define BATT_LOW	56// 3.65V/cell
 #define BATT_CRITICAL	50// 3.3V/cell
 
+#define VSENSE_PIN	PORTB0
+#define LED_HIGH	PORTB0 //highest battery led
+#define LED_MID		PORTB1
+#define LED_LOW		PORTB2	//lowest battery led
+#define LED_BLINK	7
+
+#define HYST 1
+
+#define BLINK_ERR	150
+#define BLINK_DIS	400
+
 
 
 #endif /* LIPO_H_ */
