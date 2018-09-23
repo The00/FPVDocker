@@ -14,8 +14,8 @@
 #include "lipo.h"
 
 
-uint8_t nbr_cell =2;
-uint8_t led_status =0;
+volatile uint8_t nbr_cell =ERR_UNKNOW_CELL;
+volatile uint8_t led_status =0;
 
 
 void blink(uint8_t nbr, uint8_t mask)
@@ -45,10 +45,10 @@ void blink_err(uint8_t nbr, uint8_t mask)
 void init()
 {
 	DIDR0 = 0xf; // disable input circuitry on I/O
-	DDRB = (1<<LED_HIGH)| (1<<LED_MID) | (1<<LED_LOW); //set PB0 as input, PB1 & PB2 as output
+	DDRB = (0<<LED_HIGH)| (1<<LED_MID) | (1<<LED_LOW); //set PB0 as input, PB1 & PB2 as output
 	PORTB = 0x0;
 //	SMCR = (1<<SM0); // sleep mode = ADC noise reduction
-	ADMUX = (1<<VSENSE_PIN); // PB0 as ADC input
+	ADMUX = VSENSE_PIN; // PB0 as ADC input
 	
 	ADCSRA = (1<<ADEN) | (1<<ADPS2) | (1<<ADPS1) | (1<<ADPS0)  ; // control and status register => enable ADC
 }
@@ -152,7 +152,7 @@ void displayLevel(uint8_t val)
 			}
 			else
 			{
-				PORTB = ~(PORTB & 0x7); // if below the critical threshold, blink all LED.
+				PORTB = ~(PORTB & ALL_LED); // if below the critical threshold, blink all LED.
 			}
 		}
 	}
@@ -179,10 +179,10 @@ void displayNbrCell()
 	{
 		while(1)
 		{
-			blink_err(15, 7);
+			blink_err(15, ALL_LED);
 		}
 	}
-	else if(nbr_cell == 4) blink(3, 7);
+	else if(nbr_cell == 4) blink(3,6);
 	else blink(3, nbr_cell <<1);
 }
 
@@ -203,33 +203,31 @@ ISR(ADC_vect)
 int main(void)
 {	
 	init();
-	_delay_ms(20);
-	detectNbrCell(adcRead());
+	_delay_ms(50);
+	nbr_cell = detectNbrCell(adcRead());
 	displayNbrCell();
-	setup_timer();
-	sei();
+	//setup_timer();
+	//sei();
 	
     /* Replace with your application code */
     while (1) 
     {
-		sleep_enable();
-		sleep_cpu();
-		sleep_disable();
+		//sleep_enable();
+		//sleep_cpu();
+		//sleep_disable();
 		//PORTB ^= 1 << PORTB2;
-		///_delay_ms(500);
-		//startConv();
-	/*nbr_cell = detectNbrCell(adcRead());
+	/*	_delay_ms(500);
+		
+	nbr_cell = detectNbrCell(adcRead());
 	if(nbr_cell != ERR_UNKNOW_CELL)
 		{
-			blink(2);
+		//	blink(2, 6);
 			nbr_cell--;
 			PORTB = (nbr_cell <<1);
 		}
+		else blink_err(5, 6);
+	*/
 	
-	_delay_ms(1000);
-	PORTB = 0;
-	_delay_ms(1000);
-	blink(1);*/
     }
 }
 

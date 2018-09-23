@@ -30,11 +30,11 @@
 #define LED_HIGH	PORTB0 //highest battery led
 #define LED_MID		PORTB1
 #define LED_LOW		PORTB2	//lowest battery led
-#define LED_BLINK	7
+#define ALL_LED		7
 
 #define HYST 1
 
-#define BLINK_ERR	150
+#define BLINK_ERR	100
 #define BLINK_DIS	400
 
 
