@@ -34,7 +34,7 @@
 
 #define HYST 1
 
-#define BLINK_ERR	100
+#define BLINK_ERR	80
 #define BLINK_DIS	400
 
 

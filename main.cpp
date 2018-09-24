@@ -15,7 +15,8 @@
 
 
 volatile uint8_t nbr_cell =ERR_UNKNOW_CELL;
-volatile uint8_t led_status =0;
+volatile uint8_t led_status =ALL_LED;
+volatile uint8_t cells_threshold[4];
 
 
 void blink(uint8_t nbr, uint8_t mask)
@@ -49,21 +50,19 @@ void init()
 	PORTB = 0x0;
 //	SMCR = (1<<SM0); // sleep mode = ADC noise reduction
 	ADMUX = VSENSE_PIN; // PB0 as ADC input
-	
-	ADCSRA = (1<<ADEN) | (1<<ADPS2) | (1<<ADPS1) | (1<<ADPS0)  ; // control and status register => enable ADC
 }
 
 
 void setup_timer()
 {
-	ADCSRB = 3; // start ADC conversion on compare A match 
-	ADCSRA |= (1<<ADATE) | (1<<ADIE); //enable ADC auto-trigger mode & interrupt
 	
+	ADCSRA = (1<<ADEN) | (1<<ADPS2) | (1<<ADPS1) | (1<<ADPS0) |(1<<ADATE) | (1<<ADIE); //enable ADC auto-trigger mode & interrupt
+	ADCSRB = 3; // start ADC conversion on compare A match 
 	
 	// set timer in Clear on Compare mode with OCR0A register and /8 prescaler
 	OCR0A = 37500; //compare match every 300ms
 	TCCR0A = 0;
-	TIMSK0 = (1<< OCIE0A) ; //enable interrupt on channel A match
+	//TIMSK0 = (1<< OCIE0A) ; //enable interrupt on channel A match
 	TCCR0B = (1<<WGM02) | (1<< CS01);
 }
 
@@ -97,6 +96,13 @@ uint8_t detectNbrCell(uint8_t val)
 	return ERR_UNKNOW_CELL;
 }
 
+void fill_threshold(uint8_t nbr_cell)
+{
+	cells_threshold[0] = BATT_FULL * nbr_cell;
+	cells_threshold[1] = BATT_MID * nbr_cell;
+	cells_threshold[2] = BATT_LOW * nbr_cell;
+	cells_threshold[3] = BATT_CRITICAL * nbr_cell;
+}
 void displayLevel(uint8_t val)
 {
 	uint8_t cell = val/nbr_cell; 
@@ -173,6 +179,8 @@ void displayLevel2(uint8_t val)
 	// with &&, maybe, but still not bullet proof
 }
 
+
+
 void displayNbrCell()
 {
 	if(nbr_cell == ERR_UNKNOW_CELL) 
@@ -190,7 +198,6 @@ void displayNbrCell()
 
 ISR(ADC_vect)
 {
-	//if((TIFR0 & OCF0A) != 0)
 	//PORTB ^= 1 << PORTB1; // toggle PB1 
 	displayLevel(ADCL);
 	TIFR0 = 1<<OCF0A;
@@ -205,9 +212,11 @@ int main(void)
 	init();
 	_delay_ms(50);
 	nbr_cell = detectNbrCell(adcRead());
+	void fill_threshold(nbr_cell);
 	displayNbrCell();
-	//setup_timer();
-	//sei();
+	setup_timer();
+	PORTB = ALL_LED;
+	sei();
 	
     /* Replace with your application code */
     while (1) 
