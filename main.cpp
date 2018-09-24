@@ -60,7 +60,7 @@ void setup_timer()
 	ADCSRB = 3; // start ADC conversion on compare A match 
 	
 	// set timer in Clear on Compare mode with OCR0A register and /8 prescaler
-	OCR0A = 37500; //compare match every 300ms
+	OCR0A = 32000; //compare match value
 	TCCR0A = 0;
 	//TIMSK0 = (1<< OCIE0A) ; //enable interrupt on channel A match
 	TCCR0B = (1<<WGM02) | (1<< CS01);
@@ -98,45 +98,44 @@ uint8_t detectNbrCell(uint8_t val)
 
 void fill_threshold(uint8_t nbr_cell)
 {
-	cells_threshold[0] = BATT_FULL * nbr_cell;
-	cells_threshold[1] = BATT_MID * nbr_cell;
-	cells_threshold[2] = BATT_LOW * nbr_cell;
-	cells_threshold[3] = BATT_CRITICAL * nbr_cell;
+	cells_threshold[HIGH] = BATT_FULL * nbr_cell;
+	cells_threshold[MID] = BATT_MID * nbr_cell;
+	cells_threshold[LOW] = BATT_LOW * nbr_cell;
+	cells_threshold[CRITICAL] = BATT_CRITICAL * nbr_cell;
 }
 void displayLevel(uint8_t val)
 {
-	uint8_t cell = val/nbr_cell; 
 	if(nbr_cell != ERR_UNKNOW_CELL)
 	{
 		// FULL THRESHOLD
-		if((led_status & LED_HIGH) && (cell < BATT_FULL)) // if all LED are on and cell voltage is below first threshold
+		if((led_status & (1<<LED_HIGH)) && (val < cells_threshold[HIGH])) // if all LED are on and cell voltage is below first threshold
 		{
 			led_status = (1 << LED_LOW) | (1 <<LED_MID);
 			PORTB = led_status;		
 		} 
 		// MID THRESHOLD
-		else if(led_status & LED_MID)
+		else if(led_status & (1<<LED_MID))
 		{
-			if(cell > (BATT_FULL+HYST)) // check if we need to light up the previous LED.
+			if(val > (cells_threshold[HIGH]+HYST)) // check if we need to light up the previous LED.
 			{
 				led_status = (1 << LED_LOW) | (1 <<LED_MID) | (1 << LED_HIGH);
 				PORTB = led_status;	
 			}
-			else if (cell < BATT_MID)
+			else if (val < cells_threshold[MID])
 			{
 				led_status = (1 << LED_LOW);
 				PORTB = led_status;	
 			}
 		}	
 		// LOW THRESHOLD
-		else if(led_status & LED_LOW)
+		else if(led_status & (1<<LED_LOW))
 		{
-			if(cell > (BATT_MID+HYST)) // check if we need to light up the previous LED.
+			if(val > (cells_threshold[MID]+HYST)) // check if we need to light up the previous LED.
 			{
 				led_status = (1 << LED_LOW) | (1 <<LED_MID);
 				PORTB = led_status;
 			}
-			else if (cell < BATT_LOW)
+			else if (val < cells_threshold[LOW])
 			{
 				led_status = 0;
 				PORTB = led_status;
@@ -145,13 +144,13 @@ void displayLevel(uint8_t val)
 		//if none of the LED is ON
 		else
 		{
-			if(cell > (BATT_LOW+HYST)) // check if we need to light up the previous LED.
+			if(val > (cells_threshold[LOW]+HYST)) // check if we need to light up the previous LED.
 			{
 				led_status = (1 << LED_LOW); 
 				PORTB = led_status;
 			}
 			// Critical THRESHOLD
-			else if(cell > BATT_CRITICAL + HYST)
+			else if(val > cells_threshold[CRITICAL] + HYST)
 			{
 				led_status = 0;
 				PORTB = led_status;
@@ -178,8 +177,22 @@ void displayLevel2(uint8_t val)
 	// Nop, it won't work with ||, second condition always true !
 	// with &&, maybe, but still not bullet proof
 }
-
-
+/*
+void displayLevel_r(uint8_t rank)
+{
+	uint8_t val = ADCL;
+	
+	if(nbr_cell != ERR_UNKNOW_CELL)
+	{
+		if((led_status & (1<<rank)) && (val < cells_threshold[rank])) // if all LED are on and cell voltage is below first threshold
+		{
+			led_status = (1 << LED_LOW) | (1 <<LED_MID);
+			PORTB = led_status;
+		}
+	}
+	
+}
+*/
 
 void displayNbrCell()
 {
@@ -212,7 +225,7 @@ int main(void)
 	init();
 	_delay_ms(50);
 	nbr_cell = detectNbrCell(adcRead());
-	void fill_threshold(nbr_cell);
+	fill_threshold(nbr_cell);
 	displayNbrCell();
 	setup_timer();
 	PORTB = ALL_LED;
