@@ -46,7 +46,7 @@ void blink_err(uint8_t nbr, uint8_t mask)
 void init()
 {
 	DIDR0 = 0xf; // disable input circuitry on I/O
-	DDRB = (0<<LED_HIGH)| (1<<LED_MID) | (1<<LED_LOW); //set PB0 as input, PB1 & PB2 as output
+	DDRB = (1<<LED_HIGH)| (1<<LED_MID) | (1<<LED_LOW); //set PB0, PB1 & PB2 as output
 	PORTB = 0x0;
 //	SMCR = (1<<SM0); // sleep mode = ADC noise reduction
 	ADMUX = VSENSE_PIN; // PB0 as ADC input
@@ -77,14 +77,6 @@ uint8_t adcRead()
 	ADCSRA = (1<<ADIF); // clear interrupt flag
 	
 	return ADCL;
-}
-
-void startConv()
-{
-	//ADMUX = 0; // PB0 as ADC input
-	//ADCSRA = (1<<ADEN) | (1<<ADPS2) | (1<<ADPS1) | (1<<ADPS0) | (1<<ADIE); // control and status register => enable ADC
-	ADCSRA |= (1<<ADSC); // start conversion
-	
 }
 
 uint8_t detectNbrCell(uint8_t val)
@@ -203,7 +195,7 @@ void displayNbrCell()
 			blink_err(15, ALL_LED);
 		}
 	}
-	else if(nbr_cell == 4) blink(3,6);
+	else if(nbr_cell == 4) blink(3,ALL_LED);
 	else blink(3, nbr_cell <<1);
 }
 
@@ -237,19 +229,6 @@ int main(void)
 		//sleep_enable();
 		//sleep_cpu();
 		//sleep_disable();
-		//PORTB ^= 1 << PORTB2;
-	/*	_delay_ms(500);
-		
-	nbr_cell = detectNbrCell(adcRead());
-	if(nbr_cell != ERR_UNKNOW_CELL)
-		{
-		//	blink(2, 6);
-			nbr_cell--;
-			PORTB = (nbr_cell <<1);
-		}
-		else blink_err(5, 6);
-	*/
-	
     }
 }
 

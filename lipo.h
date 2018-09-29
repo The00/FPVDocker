@@ -5,6 +5,7 @@
  *  Author: Theo
  */ 
 
+/* V1.0 */
 
 #ifndef LIPO_H_
 #define LIPO_H_
@@ -26,7 +27,7 @@
 #define BATT_LOW	56// 3.65V/cell
 #define BATT_CRITICAL	50// 3.3V/cell
 
-#define VSENSE_PIN	PORTB0
+#define VSENSE_PIN	PORTB3
 #define LED_HIGH	PORTB0 //highest battery led
 #define LED_MID		PORTB1
 #define LED_LOW		PORTB2	//lowest battery led
@@ -40,7 +41,7 @@
 #define HIGH		0
 #define MID			1
 #define LOW			2
-#define CRITICAL	4
+#define CRITICAL	3
 
 
 
